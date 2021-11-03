@@ -76,17 +76,16 @@
   },
   "variables": {
     "ubuntuOSVersion": "18.04-LTS",
-    "asetName": "dnsproxy-avail",
-    "nsgName": "dnsproxy-nsg",
-    "vnetName": "dnsproxy-vnet",
-    "vnetAddressPrefix": "10.0.0.0/8",
-    "subNet1Name": "subnet1",
-    "subNet1Prefix": "10.1.0.0/16",
+    "asetName": "avail-dnsproxy",
+    "nsgName": "nsg-dnsproxy",
+    "vnetName": "vnet-dnsproxy",
+    "vnetAddressPrefix": "10.198.134.0/26",
+    "subNet1Name": "default",
+    "subNet1Prefix": "10.198.134.0/27",
     "storType": "Standard_LRS",
     "location": "[parameters('location')]",
     "nicName": "[concat(parameters('vmName'), '-', 'nic')]",
-    "pipName": "[concat(parameters('vmName'), '-', 'pip')]",
-    "scriptUrl": "[uri(parameters('_artifactsLocation'), concat('forwarderSetup.sh', parameters('_artifactsLocationSasToken')))]",
+    "scriptUrl": "[uri('https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/demos/dns-forwarder/azuredeploy.json', concat('forwarderSetup.sh', parameters('_artifactsLocationSasToken')))]",
     "linuxConfiguration": {
       "disablePasswordAuthentication": true,
       "ssh": {
@@ -106,10 +105,46 @@
       "name": "[parameters('storageAccountName')]",
       "apiVersion": "2019-06-01",
       "location": "[variables('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks/', variables('vnetName'))]"
+      ],
       "sku": {
         "name": "[variables('storType')]"
       },
-      "kind": "StorageV2"
+      "kind": "StorageV2",
+      "properties": {
+        "defaultToOAuthAuthentication": false,
+        "allowCrossTenantReplication": true,
+        "minimumTlsVersion": "TLS1_2",
+        "allowBlobPublicAccess": false,
+        "allowSharedKeyAccess": true,
+        "networkAcls": {
+            "resourceAccessRules": [],
+            "bypass": "AzureServices",
+            "virtualNetworkRules": [
+                {
+                    "id": "[concat(resourceId('Microsoft.Network/virtualNetworks/', variables('vnetName')), '/subnets/hybrid-automation')]",
+                    "action": "Allow",
+                    "state": "Succeeded"
+                }
+            ],
+            "defaultAction": "Deny"
+        },
+        "supportsHttpsTrafficOnly": true,
+        "encryption": {
+            "services": {
+                "file": {
+                    "keyType": "Account",
+                    "enabled": true
+                },
+                "blob": {
+                    "keyType": "Account",
+                    "enabled": true
+                }
+            },
+            "keySource": "Microsoft.Storage"
+        }
+    }
     },
     {
       "type": "Microsoft.Compute/availabilitySets",
@@ -140,7 +175,7 @@
               "protocol": "Tcp",
               "sourcePortRange": "*",
               "destinationPortRange": "22",
-              "sourceAddressPrefix": "*",
+              "sourceAddressPrefix": "10.198.136.0/25",
               "destinationAddressPrefix": "*",
               "access": "Allow",
               "priority": 100,
@@ -173,23 +208,12 @@
       }
     },
     {
-      "type": "Microsoft.Network/publicIPAddresses",
-      "comments": "A public IP to allow us to SSH into the VM, not recommended for production DNS servers",
-      "name": "[variables('pipName')]",
-      "apiVersion": "2020-05-01",
-      "location": "[variables('location')]",
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic"
-      }
-    },
-    {
       "type": "Microsoft.Network/networkInterfaces",
       "comments": "A single network interface on each DNS server",
       "name": "[variables('nicName')]",
       "apiVersion": "2020-05-01",
       "location": "[variables('location')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses/', variables('pipName'))]",
         "[resourceId('Microsoft.Network/virtualNetworks/', variables('vnetName'))]",
         "[resourceId('Microsoft.Network/networkSecurityGroups/', variables('nsgName'))]"
       ],
@@ -202,9 +226,6 @@
             "name": "ipconfig1",
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('pipName'))]"
-              },
               "subnet": {
                 "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('subnet1Name'))]"
               }
