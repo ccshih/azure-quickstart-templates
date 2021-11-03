@@ -85,7 +85,7 @@
     "storType": "Standard_LRS",
     "location": "[parameters('location')]",
     "nicName": "[concat(parameters('vmName'), '-', 'nic')]",
-    "scriptUrl": "[uri('https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/demos/dns-forwarder/azuredeploy.json', concat('forwarderSetup.sh', parameters('_artifactsLocationSasToken')))]",
+    "scriptUrl": "[uri('https://raw.githubusercontent.com/ccshih/azure-quickstart-templates/master/demos/dns-forwarder/azuredeploy.json', concat('forwarderSetup.sh', parameters('_artifactsLocationSasToken')))]",
     "linuxConfiguration": {
       "disablePasswordAuthentication": true,
       "ssh": {
