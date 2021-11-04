@@ -86,17 +86,6 @@
     "location": "[parameters('location')]",
     "nicName": "[concat('nic', '-', parameters('vmName'))]",
     "scriptUrl": "[uri('https://raw.githubusercontent.com/ccshih/azure-quickstart-templates/master/demos/dns-forwarder/azuredeploy.json', concat('forwarderSetup.sh', parameters('_artifactsLocationSasToken')))]",
-    "linuxConfiguration": {
-      "disablePasswordAuthentication": true,
-      "ssh": {
-        "publicKeys": [
-          {
-            "path": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
-            "keyData": "[parameters('adminPasswordOrKey')]"
-          }
-        ]
-      }
-    }
   },
   "resources": [
     
@@ -116,8 +105,7 @@
         "osProfile": {
           "computerName": "[parameters('vmName')]",
           "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminPasswordOrKey')]",
-          "linuxConfiguration": "[if(equals(parameters('authenticationType'), 'password'), json('null'), variables('linuxConfiguration'))]"
+          "adminPassword": "[parameters('adminPasswordOrKey')]"
         },
         "storageProfile": {
           "imageReference": {
