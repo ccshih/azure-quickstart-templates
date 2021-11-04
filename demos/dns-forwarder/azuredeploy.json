@@ -88,46 +88,7 @@
     "scriptUrl": "[uri('https://raw.githubusercontent.com/ccshih/azure-quickstart-templates/master/demos/dns-forwarder/azuredeploy.json', concat('forwarderSetup.sh', parameters('_artifactsLocationSasToken')))]",
   },
   "resources": [
-    
-    {
-      "type": "Microsoft.Compute/virtualMachines",
-      "comments": "A stock Ubuntu server, a VM extension will add the DNS server to it later",
-      "name": "[parameters('vmName')]",
-      "apiVersion": "2019-12-01",
-      "location": "[variables('location')]",
-      "properties": {
-        "availabilitySet": {
-          "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('asetName'))]"
-        },
-        "hardwareProfile": {
-          "vmSize": "[parameters('vmSize')]"
-        },
-        "osProfile": {
-          "computerName": "[parameters('vmName')]",
-          "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminPasswordOrKey')]"
-        },
-        "storageProfile": {
-          "imageReference": {
-            "publisher": "Canonical",
-            "offer": "UbuntuServer",
-            "sku": "[variables('ubuntuOSVersion')]",
-            "version": "latest"
-          },
-          "osDisk": {
-            "caching": "ReadWrite",
-            "createOption": "FromImage"
-          }
-        },
-        "networkProfile": {
-          "networkInterfaces": [
-            {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
-            }
-          ]
-        }
-      }
-    },
+
     {
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "comments": "The shell script to install Bind9 and setup the ACL and forwarders.  If this step fails, check the logs in /var/log/waagent.log and /var/log/azure/* for details",
